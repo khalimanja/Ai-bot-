@@ -1,1 +1,40 @@
+<!DOCTYPE html>
+<html>
+<body>
 
+<h2>VibeAI</h2>
+<div id="chat"></div>
+
+<input id="input" placeholder="Say something..." />
+<button onclick="send()">Send</button>
+
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+<script>
+const socket = io();
+
+socket.on("message", (data) => {
+  add("Bot", data.reply);
+});
+
+function send() {
+  const input = document.getElementById("input");
+  const msg = input.value;
+
+  add("You", msg);
+
+  socket.emit("chat", {
+    userId: "user1",
+    message: msg
+  });
+
+  input.value = "";
+}
+
+function add(role, text) {
+  document.getElementById("chat").innerHTML += `<p><b>${role}:</b> ${text}</p>`;
+}
+</script>
+
+</body>
+</html>
