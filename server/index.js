@@ -1,43 +1,24 @@
 import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
 import OpenAI from "openai";
 import path from "path";
 import { fileURLToPath } from "url";
 
-dotenv.config();
-
 const app = express();
-app.use(cors());
 app.use(express.json());
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// why: Railway requires PORT binding
-const PORT = process.env.PORT || 3000;
-
-// why: fail early if missing API key
-if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ Missing OPENAI_API_KEY");
-  process.exit(1);
-}
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ---------- HEALTH CHECK ----------
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// ---------- TEST ROUTE ----------
-app.get("/test", (req, res) => {
+// TEST ROUTE
+app.get("/", (req, res) => {
   res.send("Server is working 🚀");
 });
 
-// ---------- CHAT ENDPOINT ----------
+// CHAT ROUTE
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -45,14 +26,8 @@ app.post("/chat", async (req, res) => {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content: "You are a confident, playful AI. Keep replies short.",
-        },
-        {
-          role: "user",
-          content: message,
-        },
+        { role: "system", content: "You are a confident, playful AI." },
+        { role: "user", content: message },
       ],
     });
 
@@ -60,15 +35,17 @@ app.post("/chat", async (req, res) => {
       reply: response.choices[0].message.content,
     });
   } catch (err) {
-    console.error("❌ ERROR:", err.stack);
+    console.error(err);
     res.status(500).json({ error: "Something went wrong" });
   }
 });
 
-// ---------- SERVE FRONTEND ----------
+// SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "../web")));
 
-// ---------- START SERVER ----------
+// 🚨 IMPORTANT: USE RAILWAY PORT
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
