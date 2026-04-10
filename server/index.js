@@ -53,9 +53,24 @@ app.post("/chat", async (req, res) => {
 // SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "../web")));
 
-// 🚨 IMPORTANT: USE RAILWAY PORT
+// 
+🚨 IMPORTANT: USE RAILWAY PORT
 const PORT = process.env.PORT || 3000;
+app.get("/ask", async (req, res) => {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "user", content: "Say something cool about AI" }
+      ],
+    });
 
+    res.send(response.choices[0].message.content);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error");
+  }
+});
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
