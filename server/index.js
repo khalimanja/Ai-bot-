@@ -1,5 +1,3 @@
-// server/index.js
-
 import express from "express";
 import OpenAI from "openai";
 import path from "path";
@@ -8,36 +6,43 @@ import { fileURLToPath } from "url";
 const app = express();
 app.use(express.json());
 
+// ✅ OpenAI setup
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// ✅ Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ TEST ROUTE
+// ✅ Root route (test)
 app.get("/", (req, res) => {
   res.send("Server is working 🚀");
 });
 
-// ✅ AI ROUTE (FIXED LOCATION)
+// ✅ AI route (WORKING)
 app.get("/ask", async (req, res) => {
   try {
-    const response = await openai.chat.completions.create({
+    const message = req.query.message || "Say something cool";
+
+    const response = await openai.responses.create({
       model: "gpt-4o-mini",
-      messages: [
-        { role: "user", content: "Say something cool" },
-      ],
+      input: message,
     });
 
-    res.send(response.choices[0].message.content);
+    const reply = response.output[0].content[0].text;
+
+    res.send(reply);
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error");
+    console.error("FULL ERROR:", err);
+    res.status(500).send(err.message || "Something went wrong");
   }
 });
 
-// ✅ START SERVER (ALWAYS LAST)
+// ✅ Serve frontend (optional)
+app.use(express.static(path.join(__dirname, "../web")));
+
+// ✅ Start server (Railway compatible)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
