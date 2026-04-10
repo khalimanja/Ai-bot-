@@ -17,7 +17,17 @@ const __dirname = path.dirname(__filename);
 app.get("/", (req, res) => {
   res.send("Server is working 🚀");
 });
+// TEST AI ROUTE
+app.get("/test-ai", async (req, res) => {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "user", content: "Say hello" }
+    ],
+  });
 
+  res.send(response.choices[0].message.content);
+});
 // CHAT ROUTE
 app.post("/chat", async (req, res) => {
   try {
